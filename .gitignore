@@ -1,0 +1,6 @@
+model_conversion/models/**
+model_conversion/datasets/**
+model_conversion/output/**
+
+__pycache__
+.python-version
