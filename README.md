@@ -7,4 +7,3 @@ PT to TF model conversion tool based on [nobuco](https://github.com/AlexanderLut
 
 ### ptxtf_utils
 Utility scripts for converting fault lists targeting either PT or TF models.
->>>>>>> d4059b1 (fixed README)
