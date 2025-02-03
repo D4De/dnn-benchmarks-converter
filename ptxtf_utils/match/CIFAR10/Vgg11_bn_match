@@ -1,0 +1,12 @@
+PT,TF
+features.0,conv2d
+features.4,conv2d_1
+features.8,conv2d_2
+features.11,conv2d_3
+features.15,conv2d_4
+features.18,conv2d_5
+features.22,conv2d_6
+features.25,conv2d_7
+classifier.0,dense
+classifier.3,dense_1
+classifier.6,dense_2
