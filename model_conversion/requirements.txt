@@ -1,0 +1,13 @@
+--find-links https://download.pytorch.org/whl/torch_stable.html
+
+#ipython
+numpy<2.0.0 #for compatibility
+nobuco
+tensorflow[and-cuda]==2.14.1
+keras<3.0.0
+tqdm
+tabulate
+natsort
+torch==2.2.2+cpu
+torchvision==0.17.2+cpu
+
