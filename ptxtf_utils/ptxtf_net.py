@@ -8,7 +8,9 @@ from torch import nn
 
 def get_pt(path: str, name: str):
     """
-    Executes at runtime a python module saved in path containing a Torch network of given name. Returns such network. Ensure the execution module has a trusted origin.
+    Executes at runtime a python module saved in path containing a Torch network of given name. Returns such network.
+    The name research is case-insensitive and strips any underscore.
+    Ensure the execution module has a trusted origin.
     """
     spec = importlib.util.spec_from_file_location("pt_network", path)
     if spec is None:
@@ -48,18 +50,20 @@ def get_tf_modules(tf_network, layers):
     return modules
 
 
-tf_layers = (keras.layers.Conv2D, keras.layers.Dense)
-pt_layers = (nn.Conv2d, nn.Linear)
+TF_LAYERS = (keras.layers.Conv2D, keras.layers.Dense)
+PT_LAYERS = (nn.Conv2d, nn.Linear)
 
 
 def main(args):
     pt_network = get_pt(*args.pt_path)
     tf_network = get_tf(args.tf_path)
 
-    pt_names = get_pt_modules(pt_network, pt_layers)
-    tf_names = get_tf_modules(tf_network, tf_layers)
+    pt_names = get_pt_modules(pt_network, PT_LAYERS)
+    tf_names = get_tf_modules(tf_network, TF_LAYERS)
     if len(pt_names) != len(tf_names):
-        print("layers differ")
+        print("WARNING: layers differ")
+
+    # enable this assert to block execution when a mismatch is detected
     ### assert len(pt_names) == len(
     #    tf_names
     # ), f"Cannot match layers: expected the same length, got {len(pt_names)}(PT) vs {len(tf_names)}(TF)"
@@ -78,10 +82,10 @@ def parse_args(args=None):
     argparser.add_argument(
         "pt_path",
         nargs=2,
-        help="path to a .py file containing a PT network definition and the name of the network",
+        help="path to a .py file containing a PT network definition and the name of the model",
     )
     argparser.add_argument(
-        "tf_path", help="path to a .keras file containing a keras network"
+        "tf_path", help="path to a .keras file containing a keras model"
     )
     argparser.add_argument(
         "--output",

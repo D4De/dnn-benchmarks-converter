@@ -56,6 +56,14 @@ def write_injection(
     output: os.PathLike,
     injections_per_layer: int,
 ):
+    """
+    Writes a list of faults targeting a list of layers.
+    Args:
+        layers: A list of (<layer_name>, <weights_dims>). <wheight_dims> will be used as boundary
+            for the random coordinates of the injection.
+        output: The path where the fault list will be written
+        injections_per_layer: the number of injections targeting each layer
+    """
     path = pathlib.Path(output)
     if not os.path.exists(path.parents[0]):
         os.makedirs(path.parents[0])
@@ -73,16 +81,20 @@ def write_injection(
                 index += 1
 
 
-tf_layers = (keras.layers.Conv2D, keras.layers.Dense)
-pt_layers = (nn.Conv2d, nn.Linear)
+TF_LAYERS = (keras.layers.Conv2D, keras.layers.Dense)
+PT_LAYERS = (nn.Conv2d, nn.Linear)
 
 
-def get_tf_layers(path: os.PathLike):
+def get_tf_layers(path: os.PathLike) -> list[tuple[str, tuple[int,...]]]:
+    """
+    Loads a keras model from path and extracts the layers. Only layers listed in TF_LAYERS are reported
+    Returns: a list of tuples, each one associating the layer's name to its coords
+    """
     model = keras.models.load_model(path)
     layer_coords = [
         (layer.name, layer.get_weights()[0].shape)
         for layer in model._flatten_layers(include_self=False, recursive=True)
-        if isinstance(layer, tf_layers)
+        if isinstance(layer, TF_LAYERS)
     ]
 
     return layer_coords
@@ -108,7 +120,7 @@ def get_pt(path: str, name: str):
 
 def get_pt_layers(network: nn.Module) -> list[tuple[str, tuple[int, ...]]]:
     """
-    Returns a list containing the association of <layer_name>, <layer_dims> of a given Torch network. See pt_layers for supported layers
+    Returns a list of (<layer_name>, <layer_dims>) of a given Torch network. Selected layers are listed in PT_LAYERS
     Args:
         network: a torch.nn.Module object
     Returns:
@@ -117,7 +129,7 @@ def get_pt_layers(network: nn.Module) -> list[tuple[str, tuple[int, ...]]]:
     return [
         (name, module.weight.shape)
         for name, module in network().named_modules()
-        if isinstance(module, pt_layers)
+        if isinstance(module, PT_LAYERS)
     ]
 
 

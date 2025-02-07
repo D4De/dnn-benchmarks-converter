@@ -1,9 +1,23 @@
 import argparse
 import csv
-from typing import Callable, TypeVar
+from typing import Callable, TypeVar, TextIO
 
 
-def create_matcher(file, rtl=True) -> dict[str, str]:
+def create_matcher(file: TextIO, rtl:bool=True) -> dict[str, str]:
+    """
+    Loads a layer matching from a file. It is compaible with the output of ptxtf_net.py
+    Expected format:
+    header (skipped)
+    <pt_layer>,<tf_layer>
+    ...
+    
+    Arguments:
+        file: a file opened in read mode
+        rtl: translates from the right column (TF) to the left column (PT)
+
+    Returns:
+        dict[str, str]: a dict matching each layer
+    """
     matcher = {}
     reader = file.readlines()
     next(iter(reader))  # skip header
@@ -26,10 +40,10 @@ def translate_fault(
     """
     Translates a fault list in csv format, applying bit_permutation to coordinates.
     Args:
-        reader: iterable input object
-        writer: csv._writer object
+        reader: csv reader iterable input object
+        writer: csv writer object
         layer_matcher: dict containing matching layers (in->out)
-        bit_permutation: a callable that permutes coordinates
+        permutation: a callable that permutes coordinates
         skip_row: skip the second row (gold row in injector reports)
     """
     writer.writerow(next(iter(reader)))  # header
