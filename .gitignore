@@ -1,4 +1,7 @@
-model_conversion/model_conversion/models/**
+model_conversion/model_conversion/models/**/*.th
+model_conversion/model_conversion/models/**/*.pt
+model_conversion/model_conversion/models/**/*.pth
+model_conversion/model_conversion/models/**/*.keras
 model_conversion/datasets/**
 model_conversion/output/**
 
