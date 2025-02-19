@@ -61,7 +61,7 @@ def permute_to_pt(coords: CoordT) -> CoordT:
     if len(coords) == 2:
         permuted = (coords[1], coords[0])
     elif len(coords) == 4:
-        permuted = (coords[3], coords[1], coords[0], coords[1])
+        permuted = (coords[3], coords[2], coords[0], coords[1])
     else:
         raise ValueError(
             f"unsupported coordinate format: expected 2D or 4D, got {len(coords)}D"
