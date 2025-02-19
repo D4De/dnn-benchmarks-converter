@@ -1,6 +1,7 @@
 import importlib.util
 import sys
 import argparse
+from collections import OrderedDict
 
 from tensorflow import keras
 from torch import nn
@@ -35,31 +36,89 @@ def get_tf(path: str):
 
 
 def get_pt_modules(pt_network, layers):
-    modules = []
+    names = []
+    modules = {}
     for name, module in pt_network().named_modules():
         if isinstance(module, layers):
-            modules.append(name)
-    return modules
+            names.append(name)
+            modules[name] = module
+    return names, modules 
 
 
 def get_tf_modules(tf_network, layers):
-    modules = []
+    names = []
+    modules = {} 
     for layer in tf_network._flatten_layers(include_self=False, recursive=True):
         if isinstance(layer, layers):
-            modules.append(layer.name)
-    return modules
+            names.append(layer.name)
+            modules[layer.name] = layer
+
+    return names, modules
 
 
 TF_LAYERS = (keras.layers.Conv2D, keras.layers.Dense)
 PT_LAYERS = (nn.Conv2d, nn.Linear)
 
+def natsort(layers):
+    od = OrderedDict()
+    for layer in layers:
+        if "_" in layer:
+            prefix, suffix = layer.split("_")
+            suffix = int(suffix)
+        else:
+            prefix = layer
+            suffix = -1
+
+        if prefix in od.keys():
+            od[prefix].append(suffix)
+        else:
+            od[prefix] = [suffix]
+    
+    new_layers = []
+    for k in od:
+        od[k].sort()
+        new_layers.extend((f"{k}{'_'+str(v) if v>=0 else ''}" for v in od[k]))
+
+    return new_layers
+
+def permuter(coords):
+    if len(coords) == 2:
+        permuted = (coords[1], coords[0])
+    elif len(coords) == 4:
+        permuted = (coords[2], coords[3], coords[1], coords[0])
+    else:
+        raise ValueError(
+            f"unsupported coordinate format: expected 2D or 4D, got {len(coords)}D"
+        )
+    return permuted
+
+
+
+def validate_match(tfl, ptl, tf_names, pt_names):
+    error = False
+    for tfn, ptn in zip(tf_names, pt_names):
+        tf_layer = tfl[tfn]
+        pt_layer = ptl[ptn]
+
+        tf_shape = tf_layer.get_weights()[0].shape 
+        pt_shape = permuter(tuple(pt_layer.weight.size()))
+        if not all(map(lambda t : t[0]==t[1], zip(tf_shape,pt_shape))):
+            print(f"ERROR: shape mismatch for layer TF({tfn}:{tf_shape}), PT({ptn}:{pt_shape})")
+            error=True
+            break
+        else:
+            print(f"OK: shape match for layer TF({tfn}:{tf_shape}), PT({ptn}:{pt_shape}")
+
+    if error:
+        raise ValueError("Mismatch detected")
 
 def main(args):
     pt_network = get_pt(*args.pt_path)
     tf_network = get_tf(args.tf_path)
 
-    pt_names = get_pt_modules(pt_network, PT_LAYERS)
-    tf_names = get_tf_modules(tf_network, TF_LAYERS)
+    pt_names, pt_layers = get_pt_modules(pt_network, PT_LAYERS)
+    tf_names, tf_layers = get_tf_modules(tf_network, TF_LAYERS)
+
     if len(pt_names) != len(tf_names):
         print("WARNING: layers differ")
 
@@ -67,6 +126,12 @@ def main(args):
     ### assert len(pt_names) == len(
     #    tf_names
     # ), f"Cannot match layers: expected the same length, got {len(pt_names)}(PT) vs {len(tf_names)}(TF)"
+    
+    if args.strategy == "natsort":
+        tf_names = natsort(tf_names)
+    
+    if args.validate:
+        validate_match(tf_layers, pt_layers, tf_names, pt_names)
 
     with open(args.output, "w") as f:
         f.write("PT,TF\n")
@@ -93,6 +158,20 @@ def parse_args(args=None):
         help="save the output of the matching here",
         default="./out.txt",
     )
+    argparser.add_argument(
+        "--strategy",
+        "-s",
+        help="the matching strattegy",
+        choices=("juxtapose","natsort"),
+        default="juxtapose",
+    )
+    argparser.add_argument(
+        "--validate",
+        "-v",
+        action="store_true",
+        help="ensure that the matching layers have the same dimensions"
+    )
+
     return argparser.parse_args(args)
 
 

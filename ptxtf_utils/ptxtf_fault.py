@@ -1,22 +1,11 @@
 import argparse
 import csv
-from typing import Callable, TypeVar, TextIO
+from typing import Callable, TypeVar
 
 
-def create_matcher(file: TextIO, rtl:bool=True) -> dict[str, str]:
+def create_matcher(file, rtl=True) -> dict[str, str]:
     """
-    Loads a layer matching from a file. It is compaible with the output of ptxtf_net.py
-    Expected format:
-    header (skipped)
-    <pt_layer>,<tf_layer>
-    ...
-    
-    Arguments:
-        file: a file opened in read mode
-        rtl: translates from the right column (TF) to the left column (PT)
-
-    Returns:
-        dict[str, str]: a dict matching each layer
+    Loads a layer matching from a file
     """
     matcher = {}
     reader = file.readlines()
@@ -40,8 +29,8 @@ def translate_fault(
     """
     Translates a fault list in csv format, applying bit_permutation to coordinates.
     Args:
-        reader: csv reader iterable input object
-        writer: csv writer object
+        reader: iterable input object
+        writer: csv._writer object
         layer_matcher: dict containing matching layers (in->out)
         permutation: a callable that permutes coordinates
         skip_row: skip the second row (gold row in injector reports)
@@ -65,12 +54,29 @@ def translate_fault(
 CoordT = TypeVar("CoordT", tuple[int, int], tuple[int, int, int, int])
 
 
-def permuter(coords: CoordT) -> CoordT:
-    # permute(2, 1, 0)
+def permute_to_pt(coords: CoordT) -> CoordT:
+    """
+        Permutes from pytorch convention to the tensorflow one
+    """
     if len(coords) == 2:
         permuted = (coords[1], coords[0])
     elif len(coords) == 4:
-        permuted = (coords[3], coords[2], coords[0], coords[1])
+        permuted = (coords[3], coords[1], coords[0], coords[1])
+    else:
+        raise ValueError(
+            f"unsupported coordinate format: expected 2D or 4D, got {len(coords)}D"
+        )
+    return permuted
+
+
+def permute_to_tf(coords: CoordT) -> CoordT:
+    """
+        Permutes from pytorch convention to the tensorflow one
+    """
+    if len(coords) == 2:
+        permuted = (coords[1], coords[0])
+    elif len(coords) == 4:
+        permuted = (coords[2], coords[3], coords[1], coords[0])
     else:
         raise ValueError(
             f"unsupported coordinate format: expected 2D or 4D, got {len(coords)}D"
@@ -113,8 +119,10 @@ def main(args):
 
     if args.no_permute:
         permuter_f = lambda x: x
+    elif args.pt:
+        permuter_f = permute_to_pt
     else:
-        permuter_f = permuter
+        permuter_f = permute_to_tf
 
     with open(args.file_path, "r") as fr:
         with open(args.output, "w") as fw:
