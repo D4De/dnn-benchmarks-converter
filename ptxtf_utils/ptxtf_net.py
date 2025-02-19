@@ -3,6 +3,9 @@ import sys
 import argparse
 from collections import OrderedDict
 
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+
 from tensorflow import keras
 from torch import nn
 
@@ -103,14 +106,12 @@ def validate_match(tfl, ptl, tf_names, pt_names):
         tf_shape = tf_layer.get_weights()[0].shape 
         pt_shape = permuter(tuple(pt_layer.weight.size()))
         if not all(map(lambda t : t[0]==t[1], zip(tf_shape,pt_shape))):
-            print(f"ERROR: shape mismatch for layer TF({tfn}:{tf_shape}), PT({ptn}:{pt_shape})")
+            print(f"ERROR: shape mismatch TF({tfn}:{tf_shape}), PT({ptn}:{pt_shape})")
             error=True
-            break
         else:
-            print(f"OK: shape match for layer TF({tfn}:{tf_shape}), PT({ptn}:{pt_shape}")
-
-    if error:
-        raise ValueError("Mismatch detected")
+            print(f"OK: shape match TF({tfn}:{tf_shape}), PT({ptn}:{pt_shape}")
+    
+    return error
 
 def main(args):
     pt_network = get_pt(*args.pt_path)
@@ -131,7 +132,15 @@ def main(args):
         tf_names = natsort(tf_names)
     
     if args.validate:
-        validate_match(tf_layers, pt_layers, tf_names, pt_names)
+        error = validate_match(tf_layers, pt_layers, tf_names, pt_names)
+        if error and args.strategy == "fallback":
+            print("ERROR: detected shape mismatch, trying natsort ordering")
+            tf_names = natsort(tf_names)
+            error = validate_match(tf_layers, pt_layers, tf_names, pt_names)
+
+        if error:
+            raise ValueError("FATAL: could not fix the mismatch")
+
 
     with open(args.output, "w") as f:
         f.write("PT,TF\n")
@@ -161,9 +170,9 @@ def parse_args(args=None):
     argparser.add_argument(
         "--strategy",
         "-s",
-        help="the matching strattegy",
-        choices=("juxtapose","natsort"),
-        default="juxtapose",
+        help="the matching strategy: fallback will try juxtapose and then natsort",
+        choices=("juxtapose","natsort", "fallback"),
+        default="fallback",
     )
     argparser.add_argument(
         "--validate",
