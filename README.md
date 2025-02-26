@@ -1,5 +1,5 @@
 # dnn-benchmarks-converter
-This repository contains the model converters used for cad-polito-it/dnn-benchmarks. See the specialised READMEs in the subfolders for more information about each tool.
+This repository contains the model converters used for [cad-polito-it/dnn-benchmarks](https://github.com/cad-polito-it/dnn-benchmarks). See the specific README files in the subfolders for more information about each tool.
 
 ## Repo structure
 ### model_conversion
