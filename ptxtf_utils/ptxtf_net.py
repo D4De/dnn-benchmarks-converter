@@ -131,15 +131,14 @@ def main(args):
     if args.strategy == "natsort":
         tf_names = natsort(tf_names)
     
-    if args.validate:
+    error = validate_match(tf_layers, pt_layers, tf_names, pt_names)
+    if error and args.strategy == "fallback":
+        print("ERROR: detected shape mismatch, trying natsort ordering")
+        tf_names = natsort(tf_names)
         error = validate_match(tf_layers, pt_layers, tf_names, pt_names)
-        if error and args.strategy == "fallback":
-            print("ERROR: detected shape mismatch, trying natsort ordering")
-            tf_names = natsort(tf_names)
-            error = validate_match(tf_layers, pt_layers, tf_names, pt_names)
 
-        if error:
-            raise ValueError("FATAL: could not fix the mismatch")
+    if error:
+        raise ValueError("FATAL: could not fix the mismatch")
 
 
     with open(args.output, "w") as f:
@@ -174,13 +173,6 @@ def parse_args(args=None):
         choices=("juxtapose","natsort", "fallback"),
         default="fallback",
     )
-    argparser.add_argument(
-        "--validate",
-        "-v",
-        action="store_true",
-        help="ensure that the matching layers have the same dimensions"
-    )
-
     return argparser.parse_args(args)
 
 
