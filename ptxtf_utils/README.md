@@ -1,6 +1,6 @@
 # PT to/from TF utils
 ptxtf_utils is a library of utility tools to convert fault lists from PyTorch to TensorFlow and viceversa.
-Each tool is runnable as a standalone Python script. Do note that all input and output files are formatted according to the content in [cad-polito-it/dnn-benchmarks](https://github.com/cad-polito-it/dnn-benchmarks).
+Each tool is runnable as a standalone Python script. Do note that all input and output files are formatted according to the content in [dnn-benchmarks](https://gitlab.pmcs2i.ec-lyon.fr/spappala/dnn-benchmarks).
 
 ## Requirements
 ptxtf_net.py runs with any version of PyTorch and any version of TensorFlow2. Run `pip install -r requirements.txt` to ensure you have all the requirements installed. 
@@ -33,7 +33,7 @@ pt_layerN, tf_layerN
 > Please be sure of the safety/correctness of the PyTorch script since it will be entirely executed.
 
 > [!NOTE]
-> At the moment, only the layers considered in the models in [cad-polito-it/dnn-benchmarks](https://github.com/cad-polito-it/dnn-benchmarks) are supported:
+> At the moment, only the layers considered in the models in [dnn-benchmarks](https://gitlab.pmcs2i.ec-lyon.fr/spappala/dnn-benchmarks) are supported:
 > - PyTorch: nn.Conv2d, nn.Linear 
 > - TensorFlow: keras.layers.Conv2D, keras.layers.Dense
 
