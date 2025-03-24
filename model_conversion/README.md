@@ -24,7 +24,7 @@ python -m model_conversion --help
 ```
 
 ## Tested models
-The converter has been currently tested on the models contained in [cad-polito-it/dnn-benchmarks](https://github.com/cad-polito-it/dnn-benchmarks). In particular:
+The converter has been currently tested on the models contained in [dnn-benchmarks](https://gitlab.pmcs2i.ec-lyon.fr/spappala/dnn-benchmarks). In particular:
 - CIFAR10
     - DenseNet
     - GoogLeNet
@@ -40,4 +40,5 @@ The converter has been currently tested on the models contained in [cad-polito-i
     - DenseNet
     - Resnet
     - Vgg
-
+- PascalVOC
+    - DeepLabV3
